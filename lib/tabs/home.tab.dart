@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:driver_app/assistants/assistant_method.dart';
 import 'package:driver_app/main.dart';
 import 'package:driver_app/models/direction_detail.dart';
+import 'package:driver_app/notifications/push_notification.dart';
 import 'package:driver_app/screens/registrationscreen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -54,6 +56,12 @@ class _HomeTabState extends State<HomeTab> {
 
   bool _isDriverAvailable = false;
 
+  @override
+  void initState() {
+    super.initState();
+    getCurrentDriverInfo();
+  }
+
   void locatePosition() async {
     Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high);
@@ -70,6 +78,14 @@ class _HomeTabState extends State<HomeTab> {
     // String address =
     //     await AssistantMethod.searchCoordinateAddress(position, context);
     // print("This is your address :: " + address);
+  }
+
+  void getCurrentDriverInfo() async {
+    currentFirebaseUser = await FirebaseAuth.instance.currentUser;
+    PushNotificationService pushNotificationService = PushNotificationService();
+
+    pushNotificationService.initialize();
+    pushNotificationService.getToken();
   }
 
   @override
@@ -179,7 +195,7 @@ class _HomeTabState extends State<HomeTab> {
     homeTabPageStreamSubscription =
         Geolocator.getPositionStream().listen((Position position) {
       currentPosition = position;
-      if(_isDriverAvailable){
+      if (_isDriverAvailable) {
         Geofire.setLocation(
           currentFirebaseUser.uid,
           position.latitude,
@@ -198,6 +214,5 @@ class _HomeTabState extends State<HomeTab> {
       tripRequestRef.remove();
       tripRequestRef = null;
     });
-    
   }
 }
